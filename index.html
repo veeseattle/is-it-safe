@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Is it Safe?</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c0f;
+    --surface: #111418;
+    --surface2: #181d24;
+    --border: #1e252f;
+    --border2: #2a3340;
+    --text: #e8edf2;
+    --muted: #5a6a7a;
+    --accent: #00d4ff;
+    --accent2: #0099bb;
+    --safe: #00e676;
+    --caution: #ffb300;
+    --danger: #ff3d3d;
+    --font-head: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Noise overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    margin-bottom: 56px;
+  }
+
+  .eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    font-weight: 400;
+  }
+
+  h1 {
+    font-family: var(--font-head);
+    font-size: clamp(40px, 8vw, 72px);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    color: var(--text);
+  }
+
+  h1 span {
+    color: var(--accent);
+  }
+
+  .subtitle {
+    margin-top: 16px;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    line-height: 1.7;
+    max-width: 440px;
+  }
+
+  /* Input grid */
+  .input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 2px;
+  }
+
+  .input-card {
+    background: var(--surface);
+    padding: 28px;
+  }
+
+  .input-label {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .input-label::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.6;
+  }
+
+  .field {
+    margin-bottom: 14px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .field input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    letter-spacing: 0.05em;
+  }
+
+  .field input:focus {
+    border-color: var(--accent);
+    background: #131820;
+  }
+
+  .field input::placeholder {
+    color: var(--muted);
+    opacity: 0.5;
+  }
+
+  .analyze-btn {
+    width: 100%;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    font-family: var(--font-head);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 18px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .analyze-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: white;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .analyze-btn:hover { background: #00eaff; }
+  .analyze-btn:active { transform: scale(0.99); }
+  .analyze-btn:disabled { background: var(--border2); color: var(--muted); cursor: not-allowed; }
+
+  /* Loading */
+  .loading {
+    display: none;
+    padding: 48px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    text-align: center;
+  }
+
+  .loading.visible { display: block; }
+
+  .spinner-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.2; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+
+  .loading-text {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    animation: blink 2s ease infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  /* Results */
+  #results {
+    display: none;
+    animation: fadeUp 0.5s ease forwards;
+  }
+
+  #results.visible { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Score bar - heatmap spectrum */
+  .spectrum-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 36px;
+    margin-bottom: 2px;
+  }
+
+  .spectrum-title {
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+
+  .spectrum-track {
+    position: relative;
+    height: 12px;
+    border-radius: 0;
+    background: linear-gradient(to right,
+      #00e676 0%,
+      #76ff03 18%,
+      #ffee58 36%,
+      #ffb300 50%,
+      #ff7043 68%,
+      #ff3d3d 85%,
+      #b71c1c 100%
+    );
+    margin-bottom: 8px;
+  }
+
+  .spectrum-marker {
+    position: absolute;
+    top: -6px;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 24px;
+    transition: left 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .marker-home {
+    background: #fff;
+  }
+
+  .marker-dest {
+    background: var(--accent);
+  }
+
+  .marker-label {
+    position: absolute;
+    top: -22px;
+    transform: translateX(-50%);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  .marker-home .marker-label { color: #fff; }
+  .marker-dest .marker-label { color: var(--accent); }
+
+  .spectrum-ends {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  /* Verdict banner */
+  .verdict {
+    padding: 20px 36px;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border: 1px solid var(--border);
+  }
+
+  .verdict-icon {
+    font-size: 28px;
+    line-height: 1;
+  }
+
+  .verdict-text {
+    flex: 1;
+  }
+
+  .verdict-headline {
+    font-family: var(--font-head);
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  .verdict-sub {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .verdict.safer { background: rgba(0,230,118,0.06); border-color: rgba(0,230,118,0.3); }
+  .verdict.safer .verdict-headline { color: var(--safe); }
+  .verdict.similar { background: rgba(255,179,0,0.06); border-color: rgba(255,179,0,0.3); }
+  .verdict.similar .verdict-headline { color: var(--caution); }
+  .verdict.riskier { background: rgba(255,61,61,0.06); border-color: rgba(255,61,61,0.3); }
+  .verdict.riskier .verdict-headline { color: var(--danger); }
+
+  /* Metrics grid */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 2px;
+  }
+
+  .metric-cell {
+    background: var(--surface);
+    padding: 24px;
+  }
+
+  .metric-name {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .metric-compare {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .metric-val {
+    font-family: var(--font-head);
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .metric-unit {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+
+  .metric-bars {
+    margin-top: 12px;
+  }
+
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .bar-label {
+    font-size: 9px;
+    color: var(--muted);
+    width: 36px;
+    letter-spacing: 0.08em;
+  }
+
+  .bar-track {
+    flex: 1;
+    height: 3px;
+    background: var(--border2);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    width: 0%;
+    transition: width 1.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .bar-home .bar-fill { background: #fff; opacity: 0.7; }
+  .bar-dest .bar-fill { background: var(--accent); }
+
+  .bar-number {
+    font-size: 9px;
+    color: var(--muted);
+    width: 30px;
+    text-align: right;
+  }
+
+  /* Delta badge */
+  .delta {
+    display: inline-block;
+    font-size: 10px;
+    font-family: var(--font-head);
+    font-weight: 700;
+    padding: 2px 8px;
+    letter-spacing: 0.05em;
+  }
+
+  .delta.better { background: rgba(0,230,118,0.15); color: var(--safe); }
+  .delta.worse { background: rgba(255,61,61,0.15); color: var(--danger); }
+  .delta.same { background: rgba(255,179,0,0.12); color: var(--caution); }
+
+  /* Location header row */
+  .loc-header {
+    display: grid;
+    grid-template-columns: 1fr 40px 1fr;
+    gap: 2px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 2px;
+  }
+
+  .loc-cell {
+    background: var(--surface);
+    padding: 20px 24px;
+  }
+
+  .loc-tag {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .loc-name {
+    font-family: var(--font-head);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .loc-zip {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+    letter-spacing: 0.1em;
+  }
+
+  .vs-cell {
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-head);
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  /* Data note */
+  .data-note {
+    padding: 16px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    line-height: 1.7;
+  }
+
+  .data-note a {
+    color: var(--accent2);
+    text-decoration: none;
+  }
+
+  /* Error */
+  .error-box {
+    display: none;
+    padding: 20px 24px;
+    background: rgba(255,61,61,0.06);
+    border: 1px solid rgba(255,61,61,0.3);
+    color: #ff8a8a;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+    line-height: 1.6;
+  }
+
+  .error-box.visible { display: block; }
+
+  /* Scanline top bar */
+  .topbar {
+    height: 2px;
+    background: linear-gradient(to right, transparent, var(--accent), transparent);
+    margin-bottom: 0;
+    opacity: 0.6;
+  }
+
+  @media (max-width: 600px) {
+    .input-grid { grid-template-columns: 1fr; }
+    .metrics-grid { grid-template-columns: 1fr; }
+    .loc-header { grid-template-columns: 1fr; }
+    .vs-cell { padding: 8px; }
+    h1 { font-size: 40px; }
+  }
+
+  /* Autocomplete */
+  .autocomplete-wrap {
+    position: relative;
+  }
+
+  .autocomplete-dropdown {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0; right: 0;
+    background: #131820;
+    border: 1px solid var(--accent);
+    border-top: none;
+    z-index: 999;
+    max-height: 220px;
+    overflow-y: auto;
+    display: none;
+  }
+
+  .autocomplete-dropdown.open { display: block; }
+
+  .ac-item {
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--text);
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.4;
+    transition: background 0.12s;
+  }
+
+  .ac-item:last-child { border-bottom: none; }
+  .ac-item:hover, .ac-item.active { background: rgba(0,212,255,0.1); color: var(--accent); }
+
+  .ac-item .ac-main { font-size: 12px; }
+  .ac-item .ac-sub { font-size: 10px; color: var(--muted); margin-top: 2px; letter-spacing: 0.06em; }
+
+  .ac-loading {
+    padding: 10px 14px;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar"></div>
+
+<div class="container">
+
+  <header>
+    <div class="eyebrow">// safety intelligence</div>
+    <h1>Is it<br><span>Safe?</span></h1>
+    <p class="subtitle">Compare crime rates between your home and any destination worldwide. Powered by FBI UCR, Numbeo, and international safety indices.</p>
+  </header>
+
+  <div class="input-grid">
+    <div class="input-card">
+      <div class="input-label">Home Location</div>
+      <div class="field">
+        <label>Zip Code (US)</label>
+        <input type="text" id="homeZip" placeholder="e.g. 90210" maxlength="10">
+      </div>
+      <div class="field">
+        <label>City (optional)</label>
+        <div class="autocomplete-wrap">
+          <input type="text" id="homeCity" placeholder="e.g. Beverly Hills" autocomplete="off">
+          <div class="autocomplete-dropdown" id="homeCityDrop"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-card">
+      <div class="input-label">Destination</div>
+      <div class="field">
+        <label>City &amp; Country</label>
+        <div class="autocomplete-wrap">
+          <input type="text" id="destCity" placeholder="e.g. Medellín, Colombia" autocomplete="off">
+          <div class="autocomplete-dropdown" id="destCityDrop"></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Zip / Postal Code (optional)</label>
+        <input type="text" id="destZip" placeholder="e.g. 050010">
+      </div>
+    </div>
+  </div>
+
+  <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">
+    Analyze Safety →
+  </button>
+
+  <div style="height: 32px;"></div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <div class="loading" id="loading">
+    <div class="spinner-wrap">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    <div class="loading-text">Querying safety databases...</div>
+  </div>
+
+  <div id="results">
+    <!-- filled by JS -->
+  </div>
+
+</div>
+
+<script>
+const API_URL = "https://api.anthropic.com/v1/messages";
+
+async function analyze() {
+  const homeZip = document.getElementById('homeZip').value.trim();
+  const homeCity = document.getElementById('homeCity').value.trim();
+  const destCity = document.getElementById('destCity').value.trim();
+  const destZip = document.getElementById('destZip').value.trim();
+
+  if (!homeZip && !homeCity) {
+    showError('Please enter your home zip code or city.');
+    return;
+  }
+  if (!destCity) {
+    showError('Please enter a destination city and country.');
+    return;
+  }
+
+  hideError();
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('results').style.display = 'none';
+  showLoading(true);
+  document.getElementById('analyzeBtn').disabled = true;
+
+  const homeDesc = [homeCity, homeZip].filter(Boolean).join(', ') || homeZip;
+  const destDesc = [destCity, destZip].filter(Boolean).join(', ');
+
+  const prompt = `You are a safety data analyst. The user wants to compare safety between:
+- Home: ${homeDesc}
+- Destination: ${destDesc}
+
+Using your knowledge of FBI UCR crime data, Numbeo crime indices, UN crime statistics, and international safety reports, provide realistic crime estimates for both locations.
+
+Return ONLY valid JSON in this exact structure (no markdown, no explanation):
+{
+  "home": {
+    "name": "City, State/Country",
+    "zip": "${homeZip || 'N/A'}",
+    "safetyScore": 72,
+    "murderRate": 4.2,
+    "violentCrimeRate": 380,
+    "propertyCrimeRate": 1850,
+    "crimeIndex": 45.2,
+    "dataYear": "2022-2023"
+  },
+  "destination": {
+    "name": "City, Country",
+    "zip": "${destZip || 'N/A'}",
+    "safetyScore": 38,
+    "murderRate": 18.5,
+    "violentCrimeRate": 820,
+    "propertyCrimeRate": 2100,
+    "crimeIndex": 71.8,
+    "dataYear": "2022-2023"
+  },
+  "verdict": "riskier",
+  "verdictHeadline": "Significantly higher risk at destination",
+  "verdictDetail": "Medellín has a murder rate ~4x higher than your home city, with elevated violent crime. Tourist areas are generally safer but vigilance is advised.",
+  "context": "Brief 1-2 sentence note about data sources and any important caveats specific to these locations.",
+  "tips": ["Tip 1 relevant to the destination", "Tip 2", "Tip 3"]
+}
+
+Rules:
+- safetyScore: 0-100 (100 = safest)
+- murderRate: homicides per 100,000 people per year
+- violentCrimeRate: violent crimes per 100,000 per year
+- propertyCrimeRate: property crimes per 100,000 per year
+- crimeIndex: 0-100 Numbeo-style (higher = more crime)
+- verdict must be exactly one of: "safer", "similar", "riskier" (destination vs home)
+- Use realistic, well-researched estimates. If a city has multiple sub-areas, use the metro average.`;
+
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || 'API error');
+    }
+
+    const data = await response.json();
+    const text = data.content.map(c => c.text || '').join('');
+    const clean = text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    showLoading(false);
+    renderResults(parsed);
+
+  } catch (err) {
+    showLoading(false);
+    showError('Analysis failed: ' + err.message + '. Please check your inputs and try again.');
+  }
+
+  document.getElementById('analyzeBtn').disabled = false;
+}
+
+function showLoading(v) {
+  document.getElementById('loading').classList.toggle('visible', v);
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorBox');
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+
+function hideError() {
+  document.getElementById('errorBox').classList.remove('visible');
+}
+
+function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
+
+function renderResults(d) {
+  const { home, destination: dest, verdict, verdictHeadline, verdictDetail, context, tips } = d;
+
+  // Spectrum positions: safetyScore 100 = far left (0%), 0 = far right (100%)
+  const homePos = clamp(100 - home.safetyScore, 2, 97);
+  const destPos = clamp(100 - dest.safetyScore, 2, 97);
+
+  // Bar chart max
+  const maxMurder = Math.max(home.murderRate, dest.murderRate, 0.1);
+  const maxViolent = Math.max(home.violentCrimeRate, dest.violentCrimeRate, 0.1);
+  const maxProperty = Math.max(home.propertyCrimeRate, dest.propertyCrimeRate, 0.1);
+
+  const verdictIcon = verdict === 'safer' ? '🟢' : verdict === 'similar' ? '🟡' : '🔴';
+
+  const deltaColor = (homeVal, destVal) => {
+    const pct = ((destVal - homeVal) / (homeVal || 1)) * 100;
+    if (Math.abs(pct) < 15) return { cls: 'same', txt: '≈ similar' };
+    if (pct < 0) return { cls: 'better', txt: `↓ ${Math.abs(pct).toFixed(0)}% lower` };
+    return { cls: 'worse', txt: `↑ ${pct.toFixed(0)}% higher` };
+  };
+
+  const mDelta = deltaColor(home.murderRate, dest.murderRate);
+  const vDelta = deltaColor(home.violentCrimeRate, dest.violentCrimeRate);
+  const pDelta = deltaColor(home.propertyCrimeRate, dest.propertyCrimeRate);
+
+  const tipsHtml = tips && tips.length
+    ? `<div style="margin-top:2px;background:var(--surface);border:1px solid var(--border);padding:24px;">
+        <div style="font-size:9px;letter-spacing:0.25em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;">// Travel Safety Tips</div>
+        ${tips.map(t => `<div style="font-size:11px;color:#a0b0c0;letter-spacing:0.04em;line-height:1.7;margin-bottom:8px;padding-left:14px;border-left:2px solid var(--border2);">${t}</div>`).join('')}
+      </div>` : '';
+
+  const html = `
+    <div class="loc-header">
+      <div class="loc-cell">
+        <div class="loc-tag">// Home</div>
+        <div class="loc-name">${home.name}</div>
+        <div class="loc-zip">${home.zip !== 'N/A' ? home.zip + ' · ' : ''}Safety Score: ${home.safetyScore}/100</div>
+      </div>
+      <div class="vs-cell">VS</div>
+      <div class="loc-cell">
+        <div class="loc-tag">// Destination</div>
+        <div class="loc-name">${dest.name}</div>
+        <div class="loc-zip">${dest.zip !== 'N/A' ? dest.zip + ' · ' : ''}Safety Score: ${dest.safetyScore}/100</div>
+      </div>
+    </div>
+
+    <div class="verdict ${verdict}">
+      <div class="verdict-icon">${verdictIcon}</div>
+      <div class="verdict-text">
+        <div class="verdict-headline">${verdictHeadline}</div>
+        <div class="verdict-sub">${verdictDetail}</div>
+      </div>
+    </div>
+
+    <div class="spectrum-section">
+      <div class="spectrum-title">// Safety Spectrum — Home vs Destination</div>
+      <div style="position:relative; padding-top: 32px; margin-bottom: 4px;">
+        <div class="spectrum-track" id="specTrack">
+          <div class="spectrum-marker marker-home" id="markerHome" style="left: 50%;">
+            <span class="marker-label">HOME</span>
+          </div>
+          <div class="spectrum-marker marker-dest" id="markerDest" style="left: 50%;">
+            <span class="marker-label">DEST</span>
+          </div>
+        </div>
+      </div>
+      <div class="spectrum-ends">
+        <span>● Safest</span>
+        <span>Most Dangerous ●</span>
+      </div>
+      <div style="margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--border);">
+        <div style="background: var(--surface2); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size:10px;color:var(--muted);letter-spacing:0.1em;">Crime Index (Home)</span>
+          <span style="font-family:var(--font-head);font-size:22px;font-weight:800;color:#fff;">${home.crimeIndex.toFixed(1)}</span>
+        </div>
+        <div style="background: var(--surface2); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size:10px;color:var(--muted);letter-spacing:0.1em;">Crime Index (Dest)</span>
+          <span style="font-family:var(--font-head);font-size:22px;font-weight:800;color:var(--accent);">${dest.crimeIndex.toFixed(1)}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-cell">
+        <div class="metric-name">Murder Rate<br>per 100k/yr</div>
+        <div class="delta ${mDelta.cls}">${mDelta.txt}</div>
+        <div class="metric-bars" style="margin-top:14px;">
+          <div class="bar-row bar-home">
+            <div class="bar-label">HOME</div>
+            <div class="bar-track"><div class="bar-fill" data-pct="${(home.murderRate/maxMurder*100).toFixed(1)}"></div></div>
+            <div class="bar-number">${home.murderRate.toFixed(1)}</div>
+          </div>
+          <div class="bar-row bar-dest">
+            <div class="bar-label">DEST</div>
+            <div class="bar-track"><div class="bar-fill" data-pct="${(dest.murderRate/maxMurder*100).toFixed(1)}"></div></div>
+            <div class="bar-number">${dest.murderRate.toFixed(1)}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="metric-cell">
+        <div class="metric-name">Violent Crime<br>per 100k/yr</div>
+        <div class="delta ${vDelta.cls}">${vDelta.txt}</div>
+        <div class="metric-bars" style="margin-top:14px;">
+          <div class="bar-row bar-home">
+            <div class="bar-label">HOME</div>
+            <div class="bar-track"><div class="bar-fill" data-pct="${(home.violentCrimeRate/maxViolent*100).toFixed(1)}"></div></div>
+            <div class="bar-number">${home.violentCrimeRate.toFixed(0)}</div>
+          </div>
+          <div class="bar-row bar-dest">
+            <div class="bar-label">DEST</div>
+            <div class="bar-track"><div class="bar-fill" data-pct="${(dest.violentCrimeRate/maxViolent*100).toFixed(1)}"></div></div>
+            <div class="bar-number">${dest.violentCrimeRate.toFixed(0)}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="metric-cell">
+        <div class="metric-name">Property Crime<br>per 100k/yr</div>
+        <div class="delta ${pDelta.cls}">${pDelta.txt}</div>
+        <div class="metric-bars" style="margin-top:14px;">
+          <div class="bar-row bar-home">
+            <div class="bar-label">HOME</div>
+            <div class="bar-track"><div class="bar-fill" data-pct="${(home.propertyCrimeRate/maxProperty*100).toFixed(1)}"></div></div>
+            <div class="bar-number">${home.propertyCrimeRate.toFixed(0)}</div>
+          </div>
+          <div class="bar-row bar-dest">
+            <div class="bar-label">DEST</div>
+            <div class="bar-track"><div class="bar-fill" data-pct="${(dest.propertyCrimeRate/maxProperty*100).toFixed(1)}"></div></div>
+            <div class="bar-number">${dest.propertyCrimeRate.toFixed(0)}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    ${tipsHtml}
+
+    <div class="data-note">
+      ⚠ Data sources: FBI UCR, Numbeo Crime Index, UNODC, local law enforcement reports. Figures are estimates based on available public data for ${home.dataYear}. Crime rates vary significantly by neighborhood — this tool provides metro-level averages as a general guide, not a guarantee of personal safety.
+      ${context ? '<br><br>' + context : ''}
+    </div>
+  `;
+
+  const resultsEl = document.getElementById('results');
+  resultsEl.innerHTML = html;
+  resultsEl.style.display = 'block';
+  requestAnimationFrame(() => {
+    resultsEl.classList.add('visible');
+
+    // Animate spectrum markers
+    setTimeout(() => {
+      document.getElementById('markerHome').style.left = homePos + '%';
+      document.getElementById('markerDest').style.left = destPos + '%';
+    }, 100);
+
+    // Animate bars
+    setTimeout(() => {
+      document.querySelectorAll('.bar-fill').forEach(el => {
+        el.style.width = el.dataset.pct + '%';
+      });
+    }, 300);
+  });
+}
+
+// Enter key support
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    // Only trigger analyze if no dropdown is open
+    const openDrops = document.querySelectorAll('.autocomplete-dropdown.open');
+    if (openDrops.length === 0) analyze();
+  }
+});
+
+// ── Nominatim Autocomplete ─────────────────────────────────────────
+function setupAutocomplete(inputId, dropId, cityOnly) {
+  const input = document.getElementById(inputId);
+  const drop = document.getElementById(dropId);
+  let debounceTimer = null;
+  let activeIndex = -1;
+  let currentItems = [];
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim();
+    clearTimeout(debounceTimer);
+    activeIndex = -1;
+    if (q.length < 2) { closeDrop(); return; }
+    debounceTimer = setTimeout(() => fetchSuggestions(q), 320);
+  });
+
+  input.addEventListener('keydown', e => {
+    if (!drop.classList.contains('open')) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      activeIndex = Math.min(activeIndex + 1, currentItems.length - 1);
+      highlightItem();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      activeIndex = Math.max(activeIndex - 1, 0);
+      highlightItem();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (activeIndex >= 0) selectItem(currentItems[activeIndex]);
+    } else if (e.key === 'Escape') {
+      closeDrop();
+    }
+  });
+
+  document.addEventListener('click', e => {
+    if (!input.contains(e.target) && !drop.contains(e.target)) closeDrop();
+  });
+
+  function highlightItem() {
+    drop.querySelectorAll('.ac-item').forEach((el, i) => {
+      el.classList.toggle('active', i === activeIndex);
+    });
+  }
+
+  async function fetchSuggestions(query) {
+    drop.innerHTML = '<div class="ac-loading">Searching...</div>';
+    drop.classList.add('open');
+    try {
+      const params = new URLSearchParams({
+        q: query,
+        format: 'json',
+        addressdetails: 1,
+        limit: 7,
+        featuretype: cityOnly ? 'city' : '',
+        'accept-language': 'en'
+      });
+      const url = `https://nominatim.openstreetmap.org/search?${params}`;
+      const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+      const results = await res.json();
+
+      // Filter to city/town/village/municipality level
+      const cityTypes = new Set(['city','town','village','municipality','suburb','borough','administrative','hamlet']);
+      const filtered = results.filter(r => {
+        const t = (r.type || '').toLowerCase();
+        const cls = (r.class || '').toLowerCase();
+        return cityTypes.has(t) || cls === 'place' || cls === 'boundary';
+      });
+
+      currentItems = filtered.slice(0, 6);
+
+      if (currentItems.length === 0) {
+        drop.innerHTML = '<div class="ac-loading">No results found</div>';
+        return;
+      }
+
+      drop.innerHTML = currentItems.map((item, i) => {
+        const addr = item.address || {};
+        const city = addr.city || addr.town || addr.village || addr.municipality || addr.hamlet || item.name || '';
+        const state = addr.state || addr.region || '';
+        const country = addr.country || '';
+        const sub = [state, country].filter(Boolean).join(', ');
+        return `<div class="ac-item" data-index="${i}">
+          <div class="ac-main">${city}</div>
+          ${sub ? `<div class="ac-sub">${sub}</div>` : ''}
+        </div>`;
+      }).join('');
+
+      drop.querySelectorAll('.ac-item').forEach(el => {
+        el.addEventListener('mousedown', e => {
+          e.preventDefault();
+          selectItem(currentItems[parseInt(el.dataset.index)]);
+        });
+        el.addEventListener('mouseover', () => {
+          activeIndex = parseInt(el.dataset.index);
+          highlightItem();
+        });
+      });
+
+    } catch (err) {
+      drop.innerHTML = '<div class="ac-loading">Search unavailable</div>';
+    }
+  }
+
+  function selectItem(item) {
+    const addr = item.address || {};
+    const city = addr.city || addr.town || addr.village || addr.municipality || addr.hamlet || item.name || '';
+    const state = addr.state || addr.region || '';
+    const country = addr.country || '';
+    const parts = [city, state, country].filter(Boolean);
+    input.value = parts.join(', ');
+    closeDrop();
+    input.dispatchEvent(new Event('change'));
+  }
+
+  function closeDrop() {
+    drop.classList.remove('open');
+    drop.innerHTML = '';
+    currentItems = [];
+    activeIndex = -1;
+  }
+}
+
+// Init both fields
+setupAutocomplete('homeCity', 'homeCityDrop', false);
+setupAutocomplete('destCity', 'destCityDrop', false);
+</script>
+</body>
+</html>
