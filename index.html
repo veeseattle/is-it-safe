@@ -257,7 +257,7 @@
   }
 
   .spectrum-title {
-    font-size: 9px;
+    font-size: 13px;
     letter-spacing: 0.3em;
     text-transform: uppercase;
     color: var(--muted);
@@ -301,7 +301,7 @@
     position: absolute;
     top: -22px;
     transform: translateX(-50%);
-    font-size: 9px;
+    font-size: 13px;
     letter-spacing: 0.1em;
     white-space: nowrap;
     font-weight: 500;
@@ -313,7 +313,7 @@
   .spectrum-ends {
     display: flex;
     justify-content: space-between;
-    font-size: 9px;
+    font-size: 13px;
     color: var(--muted);
     letter-spacing: 0.15em;
     text-transform: uppercase;
@@ -341,13 +341,13 @@
 
   .verdict-headline {
     font-family: var(--font-head);
-    font-size: 18px;
+    font-size: 27px;
     font-weight: 700;
     margin-bottom: 2px;
   }
 
   .verdict-sub {
-    font-size: 11px;
+    font-size: 16px;
     color: var(--muted);
     letter-spacing: 0.05em;
   }
@@ -375,7 +375,7 @@
   }
 
   .metric-name {
-    font-size: 9px;
+    font-size: 13px;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--muted);
@@ -397,7 +397,7 @@
   }
 
   .metric-unit {
-    font-size: 9px;
+    font-size: 13px;
     color: var(--muted);
     letter-spacing: 0.1em;
     margin-bottom: 4px;
@@ -415,9 +415,9 @@
   }
 
   .bar-label {
-    font-size: 9px;
+    font-size: 13px;
     color: var(--muted);
-    width: 36px;
+    width: 46px;
     letter-spacing: 0.08em;
   }
 
@@ -439,16 +439,16 @@
   .bar-dest .bar-fill { background: var(--accent); }
 
   .bar-number {
-    font-size: 9px;
+    font-size: 13px;
     color: var(--muted);
-    width: 30px;
+    width: 40px;
     text-align: right;
   }
 
   /* Delta badge */
   .delta {
     display: inline-block;
-    font-size: 10px;
+    font-size: 15px;
     font-family: var(--font-head);
     font-weight: 700;
     padding: 2px 8px;
@@ -475,7 +475,7 @@
   }
 
   .loc-tag {
-    font-size: 9px;
+    font-size: 13px;
     color: var(--muted);
     letter-spacing: 0.2em;
     text-transform: uppercase;
@@ -484,13 +484,13 @@
 
   .loc-name {
     font-family: var(--font-head);
-    font-size: 16px;
+    font-size: 24px;
     font-weight: 700;
     letter-spacing: -0.01em;
   }
 
   .loc-zip {
-    font-size: 11px;
+    font-size: 16px;
     color: var(--muted);
     margin-top: 2px;
     letter-spacing: 0.1em;
@@ -502,7 +502,7 @@
     align-items: center;
     justify-content: center;
     font-family: var(--font-head);
-    font-size: 11px;
+    font-size: 16px;
     font-weight: 800;
     color: var(--muted);
     letter-spacing: 0.1em;
@@ -513,7 +513,7 @@
     padding: 16px 24px;
     background: var(--surface);
     border: 1px solid var(--border);
-    font-size: 10px;
+    font-size: 15px;
     color: var(--muted);
     letter-spacing: 0.05em;
     line-height: 1.7;
@@ -669,8 +669,7 @@
 </div>
 
 <script>
-const API_URL = 'https://gifted-app.vania-baek.workers.dev/';
-
+const API_URL = "https://gifted-app.vania-baek.workers.dev/";
 
 async function analyze() {
   const homeZip = document.getElementById('homeZip').value.trim();
